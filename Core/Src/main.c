@@ -24,11 +24,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usbd_def.h"
+
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+extern USBD_HandleTypeDef hUsbDevice;
+
+
+
 
 /* USER CODE END PTD */
 
@@ -44,7 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t kbdPress[8] = {0,0,4,0,0,0,0,0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,7 +102,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  HAL_Delay(100);
+	  USBD_HID_Keybaord_SendReport(&hUsbDevice, kbdPress, 8);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
