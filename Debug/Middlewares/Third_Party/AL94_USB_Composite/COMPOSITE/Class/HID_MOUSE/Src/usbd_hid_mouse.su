@@ -1,0 +1,11 @@
+usbd_hid_mouse.c:327:16:USBD_HID_Init	24	static
+usbd_hid_mouse.c:368:16:USBD_HID_DeInit	16	static
+usbd_hid_mouse.c:396:16:USBD_HID_Setup	32	static
+usbd_hid_mouse.c:521:17:USBD_HID_GetFSCfgDesc	16	static
+usbd_hid_mouse.c:535:17:USBD_HID_GetHSCfgDesc	16	static
+usbd_hid_mouse.c:549:17:USBD_HID_GetOtherSpeedCfgDesc	16	static
+usbd_hid_mouse.c:563:16:USBD_HID_DataIn	16	static
+usbd_hid_mouse.c:579:17:USBD_HID_GetDeviceQualifierDesc	16	static
+usbd_hid_mouse.c:593:9:USBD_HID_Mouse_SendReport	32	static
+usbd_hid_mouse.c:620:10:USBD_HID_Mouse_GetPollingInterval	24	static
+usbd_hid_mouse.c:642:6:USBD_Update_HID_Mouse_DESC	16	static
