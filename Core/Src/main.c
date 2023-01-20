@@ -50,8 +50,10 @@ extern USBD_HandleTypeDef hUsbDevice;
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t kbdPress[8] = {0,0,0x57,0,0,0,0,0};
-uint8_t hialex[] = {0,0,72,105,0,0,0,};
+uint8_t kbdPress[8] = {0,0,0x10,0x0E,0x08,0x28,0,0};
+uint8_t kbdRelease[8] = {0,0,0,0,0,0,0,0};
+uint8_t hialex[] = {0,0,72,105,0,0,0};
+
 typedef struct
 {
 	uint8_t button;
@@ -60,7 +62,8 @@ typedef struct
 	int8_t wheel;
 } mouseHID;
 
-mouseHID mousehid = {0,1,1,0};
+mouseHID mousehid = {0,0,0,0};
+mouseHID mousemove[4]={{0,10,0,0},{0,0,-10,0},{0,-10,0,0},{0,0,10,0}};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -112,9 +115,23 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  HAL_Delay(100);
+	  //mousehid.mouse_x=10;
+	  for (int y=0; y<4; y++)
+	  {
+
+		  for (int i=0; i < 30; i++)
+		  {
+			  HAL_Delay(50);
+			  mousehid=mousemove[y];
+			  USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid));
+		  }
+		  USBD_HID_Keybaord_SendReport(&hUsbDevice, &kbdPress, 8);
+		  HAL_Delay(50);
+		  USBD_HID_Keybaord_SendReport(&hUsbDevice, &kbdRelease, 8);
+	  }
+
 	  //USBD_HID_Keybaord_SendReport(&hUsbDevice, kbdPress, 8);
-	  USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, 4);
+
 	  //USBD_HID_Keybaord_SendReport(&hUsbDevice, hialex, sizeof(hialex));
     /* USER CODE BEGIN 3 */
   }
