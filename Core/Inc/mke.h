@@ -2,8 +2,8 @@
 #include "usb.h"
 #include "gpio.h"
 #include "usbd_def.h"
+#include "spi.h"
 
-void SystemClock_Config(void);
 
 typedef struct
 {
@@ -44,3 +44,7 @@ typedef struct
 	uint8_t PACKET;
 } switchSPI;
 
+uint8_t spi_receive_buffer[9];
+
+void mouse_keyboard_test(void);
+void mke_main(void);

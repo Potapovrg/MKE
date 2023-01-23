@@ -98,7 +98,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  mouse_keyboard_test();
+	  //mouse_keyboard_test();
+	  mke_main();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
