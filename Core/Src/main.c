@@ -25,13 +25,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_def.h"
-
+#include "mke.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-extern USBD_HandleTypeDef hUsbDevice;
+//extern USBD_HandleTypeDef hUsbDevice;
 
 
 
@@ -50,20 +50,7 @@ extern USBD_HandleTypeDef hUsbDevice;
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t kbdPress[8] = {0,0,0x10,0x0E,0x08,0x28,0,0};
-uint8_t kbdRelease[8] = {0,0,0,0,0,0,0,0};
-uint8_t hialex[] = {0,0,72,105,0,0,0};
 
-typedef struct
-{
-	uint8_t button;
-	int8_t mouse_x;
-	int8_t mouse_y;
-	int8_t wheel;
-} mouseHID;
-
-mouseHID mousehid = {0,0,0,0};
-mouseHID mousemove[4]={{0,10,0,0},{0,0,-10,0},{0,-10,0,0},{0,0,10,0}};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -168,22 +155,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void mouse_keyboard_test(void)
-{
-	  for (int y=0; y<4; y++)
-	 	  {
 
-	 		  for (int i=0; i < 30; i++)
-	 		  {
-	 			  HAL_Delay(50);
-	 			  mousehid=mousemove[y];
-	 			  USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid));
-	 		  }
-	 		  USBD_HID_Keybaord_SendReport(&hUsbDevice, &kbdPress, 8);
-	 		  HAL_Delay(50);
-	 		  USBD_HID_Keybaord_SendReport(&hUsbDevice, &kbdRelease, 8);
-	 	  }
-}
 /* USER CODE END 4 */
 
 /**
