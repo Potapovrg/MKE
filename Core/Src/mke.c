@@ -7,6 +7,7 @@ extern USBD_HandleTypeDef hUsbDevice;
 
 mouseHID mousehid = {0,0,0,0};
 
+keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
 
 
 uint8_t spi_receive_buffer[9]= {0,0,0,0,0,0,0,0,0};
@@ -19,6 +20,21 @@ void mke_main(void)
 	{
 		HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 	}
+	else if (spi_receive_buffer[0]==0x02)
+	{
+		keyboardhid.MODIFIER=spi_receive_buffer[1];
+		keyboardhid.RESERVED=spi_receive_buffer[2];
+		keyboardhid.KEYCODE1=spi_receive_buffer[3];
+		keyboardhid.KEYCODE2=spi_receive_buffer[4];
+		keyboardhid.KEYCODE3=spi_receive_buffer[5];
+		keyboardhid.KEYCODE4=spi_receive_buffer[6];
+		keyboardhid.KEYCODE5=spi_receive_buffer[7];
+		keyboardhid.KEYCODE6=spi_receive_buffer[8];
+
+		USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid));
+
+	}
+	for (int i = 0; spi_receive_buffer[i] != NULL; i++);
 }
 
 
