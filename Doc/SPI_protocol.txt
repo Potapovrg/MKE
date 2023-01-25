@@ -1,0 +1,74 @@
+Конфигурация малинки на примере python:
+https://microtechnics.ru/raspberry-pi-obmen-dannymi-po-interfejsu-spi/
+
+SPI0_MOSI - master output slave input - для передачи данных от ведущего к подчиненному
+SPI0_MISO - master input slave output - для приема данных от slave
+SPI0_SCLK - тактовый сигнал - его также генерирует master
+СS1..10 - 10 любых свободных GPIO, 1 - передаем данные на устройсво 
+
+Параметры SPI:
+
+bits_per_word: 8
+
+no_cs: True (CS программно на 10 устройств)
+
+max_speed_hz: 375000 (В ходе тестов будем повышать)
+
+mode: 0b00
+
+Протокол:
+
+Выставляем 1 на соотвествующей нужному телефону ноге GPIO CS1..10
+Отправляем последовательность бит со следующей структурой:
+
+typedef struct
+{
+	uint8_t TARGET;
+	data DATA;
+} dataSPI; 
+-------------------------------------------
+TARGET=0x01 Управление мышкой
+
+DATA:
+typedef struct
+{
+	uint8_t button;
+	int8_t mouse_x;
+	int8_t mouse_y;
+	int8_t wheel;
+} mouseHID;
+
+-------------------------------------------
+TARGET=0x02 Управление уклавиатурой
+
+DATA:
+typedef struct
+{
+	uint8_t MODIFIER;
+	uint8_t RESERVED;
+	uint8_t KEYCODE1;
+	uint8_t KEYCODE2;
+	uint8_t KEYCODE3;
+	uint8_t KEYCODE4;
+	uint8_t KEYCODE5;
+	uint8_t KEYCODE6;
+} keyboardHID;
+
+-------------------------------------------
+TARGET=0x03 Управление переключателем OTG/ADB
+DATA:
+uint8_t data=0x01(OTG) 0x02(ADB) 
+
+-------------------------------------------
+TARGET=0xFF Проверка связи 
+
+Если все ок устройсво возвращает малинке 1 байт со значением входящего TARGET, обмен должен выглядеть так, на примере клавиатуры:
+
+Out: {0x02,0,0,0x10,0x0E,0x08,0x28,0,0}			Нажали клавиши 'm','k','e'
+In:  {0x02}										Все ок
+Out: {0x02,0,0,0,0,0,0,0,0};					Отпустили все клавиши
+In:  {0x02}										Все ок
+
+
+
+
