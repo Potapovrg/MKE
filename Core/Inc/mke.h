@@ -44,7 +44,25 @@ typedef struct
 	uint8_t PACKET;
 } switchSPI;
 
+typedef struct
+{
+	uint8_t target;
+	uint8_t button;
+	int8_t mouse_x;
+	int8_t mouse_y;
+	int8_t wheel;
+	uint8_t modifier;
+	uint8_t reserved;
+	uint8_t keycode1;
+	uint8_t keycode2;
+	uint8_t keycode3;
+	uint8_t keycode4;
+	uint8_t keycode5;
+	uint8_t keycode6;
+} bufferSPI;
+
 uint8_t spi_receive_buffer[9];
 
 void mouse_keyboard_test(void);
 void mke_main(void);
+void mke_main_2(void);

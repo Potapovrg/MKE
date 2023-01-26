@@ -99,7 +99,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	  //mouse_keyboard_test();
-	  mke_main();
+	  mke_main_2();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
