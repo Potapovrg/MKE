@@ -64,5 +64,6 @@ typedef struct
 uint8_t spi_receive_buffer[9];
 
 void mouse_keyboard_test(void);
+void mouse_keyboard_test_2(void);
 void mke_main(void);
 void mke_main_2(void);
