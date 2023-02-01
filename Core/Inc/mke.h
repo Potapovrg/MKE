@@ -4,6 +4,8 @@
 #include "usbd_def.h"
 #include "spi.h"
 
+#define OTG 0b00000000;
+#define ADB 0b00000100;
 
 typedef struct
 {

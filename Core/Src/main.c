@@ -91,6 +91,7 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
+  HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -98,9 +99,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  //mouse_keyboard_test_2();
-	  mke_main_2();
+
     /* USER CODE BEGIN 3 */
+	  mouse_keyboard_test_2();
   }
   /* USER CODE END 3 */
 }
