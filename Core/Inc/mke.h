@@ -4,8 +4,10 @@
 #include "usbd_def.h"
 #include "spi.h"
 
-#define OTG 0b00000000;
-#define ADB 0b00000100;
+#define OTG 0b00000100
+#define ADB 0b00000000
+#define MOUSE 0b00000001
+#define KEYBOARD 0b00000010
 
 typedef struct
 {
@@ -63,9 +65,13 @@ typedef struct
 	uint8_t keycode6;
 } bufferSPI;
 
-uint8_t spi_receive_buffer[9];
+
 
 void mouse_keyboard_test(void);
 void mouse_keyboard_test_2(void);
 void mke_main(void);
 void mke_main_2(void);
+int check_state(void);
+void button_click(void);
+void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
+void keyboardhid_copy(keyboardHID *mousehid,bufferSPI *spi_receive_buffer);
