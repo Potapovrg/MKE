@@ -33,16 +33,20 @@ void mke_main(void)
 					{
 						if (target_state==OTG)
 						{
+							//HAL_Delay(500);
 							HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
 							HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+							button_click();
 						}
 
 						else
 							{
 								HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
 								HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+								HAL_Delay(1000);
+								button_click();
 							}
-						button_click();
+
 					}
 
 					if (target_state==OTG)
