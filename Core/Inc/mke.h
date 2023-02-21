@@ -8,6 +8,7 @@
 #define ADB 0b00000000
 #define MOUSE 0b00000001
 #define KEYBOARD 0b00000010
+#define CHECK 0b00001000
 
 typedef struct
 {
