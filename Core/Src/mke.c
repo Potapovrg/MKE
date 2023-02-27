@@ -22,10 +22,12 @@ HAL_StatusTypeDef SPIstatus;
 void mke_main(void)
 {
 
-	/*if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
-			{*/
+	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
+			{
 				if (HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
 				{
+					//spi_transmit_buffer=0xff;
+					//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 					target_state=spi_receive_buffer.target&OTG;
 					current_state=check_state();
 
@@ -71,13 +73,16 @@ void mke_main(void)
 						}
 					}
 
+					//spi_transmit_buffer=0xff;
+					//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+
 					if ((spi_receive_buffer.target&CHECK)==CHECK)
 					{
 						spi_transmit_buffer=spi_transmit_buffer|CHECK;
 						HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 					}
 				}
-			//}
+			}
 }
 
 
