@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "spi.h"
 #include "usb.h"
 #include "gpio.h"
@@ -89,6 +90,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USB_PCD_Init();
   MX_SPI1_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
   HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);

@@ -1,1 +1,8 @@
 Replace files with HID_KEYBOARD.zip
+
+stm32f1xx_hal_spi.c
+
+Changes in Lines 1136:
+
+ //if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_CRCERR) != RESET)
+  if (READ_REG(hspi->Instance->RXCRCR)!=READ_REG(hspi->Instance->DR))

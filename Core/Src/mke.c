@@ -24,10 +24,13 @@ void mke_main(void)
 
 	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
 			{
-				if (HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
+				SPIstatus=HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),1000);
+				if (SPIstatus==HAL_OK)
+				//if (HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
 				{
 					//spi_transmit_buffer=0xff;
 					//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+					HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 					target_state=spi_receive_buffer.target&OTG;
 					current_state=check_state();
 
@@ -36,13 +39,13 @@ void mke_main(void)
 						if (target_state==OTG)
 						{
 							HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
-							HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+							//HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
 							button_click();
 						}
 
 						else
 							{
-								HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+								//HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
 								HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
 								HAL_Delay(1000);
 								button_click();
