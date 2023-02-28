@@ -24,7 +24,70 @@ void mke_main(void)
 
 	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
 			{
-				SPIstatus=HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),1000);
+				SPIstatus=HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),10);
+
+				if ((SPIstatus==HAL_OK)&&((spi_receive_buffer.target&CHECK)==0))
+				{
+					//spi_transmit_buffer=spi_receive_buffer.target;
+					HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+
+					HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+					target_state=spi_receive_buffer.target&OTG;
+					current_state=check_state();
+
+					if (target_state!=current_state)
+					{
+						if (target_state==OTG)
+						{
+							HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
+							//HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+							button_click();
+						}
+
+						else
+							{
+								//HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+								HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+								HAL_Delay(1000);
+								button_click();
+							}
+
+					}
+
+					spi_transmit_buffer=check_state();
+
+					if (target_state==OTG)
+					{
+						if ((spi_receive_buffer.target&MOUSE)==MOUSE)
+						{
+							mousehid_copy(&mousehid,&spi_receive_buffer);
+							if (USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid))==USBD_OK)
+							{
+								spi_transmit_buffer=spi_transmit_buffer|MOUSE;
+							}
+						}
+
+						if ((spi_receive_buffer.target&KEYBOARD)==KEYBOARD)
+						{
+							keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
+							if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
+							{
+								spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
+							}
+						}
+					}
+
+				}
+			}
+}
+
+
+void mke_main_2(void)
+{
+
+	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
+			{
+				SPIstatus=HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),10);
 				if (SPIstatus==HAL_OK)
 				//if (HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
 				{
@@ -81,63 +144,12 @@ void mke_main(void)
 
 					if ((spi_receive_buffer.target&CHECK)==CHECK)
 					{
-						spi_transmit_buffer=spi_transmit_buffer|CHECK;
+						//spi_transmit_buffer=spi_transmit_buffer|CHECK;
+						spi_transmit_buffer=spi_receive_buffer.target;
 						HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 					}
 				}
 			}
-}
-
-
-void mke_main_2(void)
-{
-
-	/*if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
-			{*/
-				if (HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
-				{
-					target_state=spi_receive_buffer.target&OTG;
-					current_state=check_state();
-
-					if (target_state!=current_state)
-					{
-						if (target_state==OTG)
-						{
-							//HAL_Delay(500);
-							HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
-							HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-							button_click();
-						}
-
-						else
-							{
-								HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-								HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
-								HAL_Delay(1000);
-								button_click();
-							}
-
-					}
-
-
-
-					if (target_state==OTG)
-					{
-						if ((spi_receive_buffer.target&MOUSE)==MOUSE)
-						{
-							mousehid_copy(&mousehid,&spi_receive_buffer);
-							USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid));
-						}
-
-						if ((spi_receive_buffer.target&KEYBOARD)==KEYBOARD)
-						{
-							keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
-							USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid));
-						}
-					}
-					//HAL_SPI_Transmit(&hspi1,&spi_receive_buffer.target,sizeof(spi_receive_buffer.target),10);
-				}
-			//}
 }
 
 
