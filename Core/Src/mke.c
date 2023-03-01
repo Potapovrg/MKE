@@ -24,7 +24,7 @@ void mke_main(void)
 
 	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
 			{
-				SPIstatus=HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),10);
+				SPIstatus=HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),1000);
 
 				if ((SPIstatus==HAL_OK)&&((spi_receive_buffer.target&CHECK)==0))
 				{
