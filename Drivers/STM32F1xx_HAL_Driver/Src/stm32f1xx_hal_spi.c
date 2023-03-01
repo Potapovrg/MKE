@@ -1133,12 +1133,10 @@ HAL_StatusTypeDef HAL_SPI_Receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint1
 
 #if (USE_SPI_CRC != 0U)
   /* Check if CRC error occurred */
-  //if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_CRCERR) != RESET)
-  if (READ_REG(hspi->Instance->RXCRCR)!=READ_REG(hspi->Instance->DR))
+  if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_CRCERR) != RESET)
   {
     /* Check if CRC error is valid or not (workaround to be applied or not) */
     if (SPI_ISCRCErrorValid(hspi) == SPI_VALID_CRC_ERROR)
-	 //if (READ_REG(hspi->Instance->RXCRCR)!=READ_REG(hspi->Instance->DR))
     {
       SET_BIT(hspi->ErrorCode, HAL_SPI_ERROR_CRC);
 

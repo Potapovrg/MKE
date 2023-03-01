@@ -64,6 +64,7 @@ typedef struct
 	uint8_t keycode4;
 	uint8_t keycode5;
 	uint8_t keycode6;
+	uint8_t crc;
 } bufferSPI;
 
 
@@ -73,6 +74,9 @@ void mouse_keyboard_test_2(void);
 void mke_main(void);
 void mke_main_2(void);
 int check_state(void);
+void switch_state(void);
 void button_click(void);
+void send_to_usb(void);
 void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
 void keyboardhid_copy(keyboardHID *mousehid,bufferSPI *spi_receive_buffer);
+uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght);
