@@ -36,7 +36,7 @@ void mke_main(void)
 							HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 							switch_state();
 							send_to_usb();
-							spi_transmit_buffer=spi_receive_buffer.target; //test
+							//spi_transmit_buffer=spi_receive_buffer.target; //test
 							HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 						}
 
@@ -52,7 +52,7 @@ void mke_main(void)
 						spi_transmit_buffer=0xFF;
 						HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 					}
-					spi_transmit_buffer=0;
+					//spi_transmit_buffer=0;
 				}
 			}
 }
@@ -108,7 +108,7 @@ void switch_state(void)
 		else
 		{
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
-			HAL_Delay(1000);
+			//HAL_Delay(1000);
 			button_click();
 		}
 
