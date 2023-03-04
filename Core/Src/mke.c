@@ -51,6 +51,8 @@ void mke_main(void)
 					{
 						spi_transmit_buffer=0xFF;
 						HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+						//HAL_Delay(10);
+
 					}
 					//spi_transmit_buffer=0;
 				}
@@ -88,9 +90,9 @@ void keyboardhid_copy(keyboardHID *keyboardhid,bufferSPI *spi_receive_buffer)
 void button_click()
 {
 	HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_RESET);
-	HAL_Delay(100);
+	HAL_Delay(45);
 	HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
-	HAL_Delay(100);
+	//HAL_Delay(100);
 }
 
 void switch_state(void)
