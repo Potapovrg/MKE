@@ -8,6 +8,7 @@ extern USBD_HandleTypeDef hUsbDevice;
 float exec_time;
 #endif
 
+float exec_time;
 mouseHID mousehid = {0,0,0,0};
 keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
 
