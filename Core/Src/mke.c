@@ -1,9 +1,12 @@
 #include "mke.h"
+#include"exec_time.h"
 
 
 extern USBD_HandleTypeDef hUsbDevice;
 
-
+#ifdef EXEC_TIME
+float exec_time;
+#endif
 
 mouseHID mousehid = {0,0,0,0};
 keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
@@ -22,6 +25,9 @@ HAL_StatusTypeDef SPIstatus;
 
 void mke_main(void)
 {
+#ifdef EXEC_TIME
+	start_exec_time();
+#endif
 
 	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
 			{
@@ -35,9 +41,15 @@ void mke_main(void)
 						{
 							HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 							switch_state();
+#ifdef EXEC_TIME_USB
+							start_exec_time();
+#endif
 							send_to_usb();
 							//spi_transmit_buffer=spi_receive_buffer.target; //test
 							HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+#ifdef EXEC_TIME_USB
+							exec_time=stop_exec_time_float();
+#endif
 						}
 
 						else
@@ -57,6 +69,9 @@ void mke_main(void)
 					//spi_transmit_buffer=0;
 				}
 			}
+#ifdef EXEC_TIME
+	exec_time=stop_exec_time_float();
+#endif
 }
 
 
@@ -139,7 +154,18 @@ void send_to_usb(void)
 			keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
 			if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
 			{
+#ifndef UNPRESS_ENABLE
 				spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
+#endif
+
+#ifdef UNPRESS_ENABLE
+				keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
+				HAL_Delay(50);
+				if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
+				{
+					spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
+				}
+#endif
 			}
 		}
 	}

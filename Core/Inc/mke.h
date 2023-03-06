@@ -10,6 +10,10 @@
 #define KEYBOARD 0b00000010
 #define CHECK 0b00001000
 
+//#define UNPRESS_ENABLE
+
+//#define EXEC_TIME
+//#define EXEC_TIME_USB
 typedef struct
 {
 	uint8_t button;

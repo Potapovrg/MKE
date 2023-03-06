@@ -91,6 +91,9 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
+#ifdef EXEC_TIME
+  DWT_Init();
+#endif
   HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
   //HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
   HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
