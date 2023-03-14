@@ -3,6 +3,7 @@
 #include "gpio.h"
 #include "usbd_def.h"
 #include "spi.h"
+#include "iwdg.h"
 
 #define OTG 0b00000100
 #define ADB 0b00000000
@@ -75,6 +76,7 @@ typedef struct
 
 void mouse_keyboard_test(void);
 void mouse_keyboard_test_2(void);
+void mke_init(void);
 void mke_main(void);
 void mke_main_2(void);
 int check_state(void);

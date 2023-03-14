@@ -60,16 +60,16 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
-#define SWITCH_CONTROL_Pin GPIO_PIN_10
-#define SWITCH_CONTROL_GPIO_Port GPIOB
-#define SWITCH_FEEDBACK_Pin GPIO_PIN_11
+#define CS_Pin GPIO_PIN_0
+#define CS_GPIO_Port GPIOB
+#define SWITCH_FEEDBACK_Pin GPIO_PIN_12
 #define SWITCH_FEEDBACK_GPIO_Port GPIOB
-#define CS_Pin GPIO_PIN_15
-#define CS_GPIO_Port GPIOA
-#define OTG_Pin GPIO_PIN_3
-#define OTG_GPIO_Port GPIOB
-#define OTG_HUB_Pin GPIO_PIN_4
+#define SWITCH_CONTROL_Pin GPIO_PIN_8
+#define SWITCH_CONTROL_GPIO_Port GPIOA
+#define OTG_HUB_Pin GPIO_PIN_3
 #define OTG_HUB_GPIO_Port GPIOB
+#define OTG_Pin GPIO_PIN_4
+#define OTG_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

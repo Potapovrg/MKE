@@ -24,12 +24,26 @@ uint8_t spi_transmit_buffer=0;
 uint8_t spi_transmit_buffer_1=0;
 HAL_StatusTypeDef SPIstatus;
 
+void mke_init(void)
+{
+	if (check_state()!=0)
+	{
+		button_click();
+	}
+
+	while(1)
+	{
+		HAL_IWDG_Refresh(&hiwdg);
+		mke_main();
+		//HAL_Delay(100);
+	}
+}
+
 void mke_main(void)
 {
 #ifdef EXEC_TIME
 	start_exec_time();
 #endif
-
 	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
 			{
 				if (HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)

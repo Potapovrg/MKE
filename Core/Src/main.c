@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "iwdg.h"
 #include "spi.h"
 #include "usb.h"
 #include "gpio.h"
@@ -89,6 +90,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USB_PCD_Init();
   MX_SPI1_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
 #ifdef EXEC_TIME
@@ -98,6 +100,7 @@ int main(void)
   //HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
   HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+  mke_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,7 +111,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  //mouse_keyboard_test_2();
-	  mke_main();
+	  //mke_main();
   }
   /* USER CODE END 3 */
 }
@@ -126,10 +129,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
