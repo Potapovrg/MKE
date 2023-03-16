@@ -24,6 +24,10 @@ uint8_t spi_transmit_buffer=0;
 uint8_t spi_transmit_buffer_1=0;
 HAL_StatusTypeDef SPIstatus;
 
+#ifdef ERR_RESET
+uint8_t error_counter=0;
+#endif
+
 void mke_init(void)
 {
 	if (check_state()!=0)
@@ -35,7 +39,6 @@ void mke_init(void)
 	{
 		HAL_IWDG_Refresh(&hiwdg);
 		mke_main();
-		//HAL_Delay(100);
 	}
 }
 
@@ -60,8 +63,12 @@ void mke_main(void)
 							start_exec_time();
 #endif
 							send_to_usb();
-							//spi_transmit_buffer=spi_receive_buffer.target; //test
 							HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+
+#ifdef ERR_RESET
+							error_counter=0;
+#endif
+
 #ifdef EXEC_TIME_USB
 							exec_time=stop_exec_time_float();
 #endif
@@ -78,11 +85,26 @@ void mke_main(void)
 					{
 						spi_transmit_buffer=0xFF;
 						HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
-						//HAL_Delay(10);
 
+#ifdef ERR_RESET
+						error_counter++;
+#endif
 					}
-					//spi_transmit_buffer=0;
+
 				}
+#ifdef ERR_RESET
+				else
+				{
+					error_counter++;
+
+				}
+
+				if (error_counter>10)
+				{
+					NVIC_SystemReset();
+				}
+#endif
+
 			}
 #ifdef EXEC_TIME
 	exec_time=stop_exec_time_float();

@@ -12,7 +12,7 @@
 #define CHECK 0b00001000
 
 //#define UNPRESS_ENABLE
-
+#define ERR_RESET
 //#define EXEC_TIME
 //#define EXEC_TIME_USB
 typedef struct
