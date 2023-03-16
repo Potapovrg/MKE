@@ -83,7 +83,7 @@ void mke_main(void)
 
 					else
 					{
-						spi_transmit_buffer=0xFF;
+						spi_transmit_buffer=0xF8;
 						HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 
 #ifdef ERR_RESET
