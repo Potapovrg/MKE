@@ -96,6 +96,8 @@ void mke_main(void)
 				else
 				{
 					error_counter++;
+					spi_transmit_buffer=0x90;
+					//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 
 				}
 
