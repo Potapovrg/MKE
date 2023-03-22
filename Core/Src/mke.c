@@ -49,7 +49,7 @@ void mke_main(void)
 #endif
 	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
 			{
-				if (HAL_SPI_Receive(&hspi1,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
+				if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
 				{
 					crc8=CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
 					if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
@@ -63,7 +63,8 @@ void mke_main(void)
 							start_exec_time();
 #endif
 							send_to_usb();
-							HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+							//spi_transmit_buffer=0xFF;
+							//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 
 #ifdef ERR_RESET
 							error_counter=0;
@@ -76,15 +77,16 @@ void mke_main(void)
 
 						else
 						{
-							spi_transmit_buffer=0x00;
-							HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+							spi_transmit_buffer=check_state();
+							//spi_transmit_buffer=0x00;
+							//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 						}
 					}
 
 					else
 					{
 						spi_transmit_buffer=0xF8;
-						HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
+						//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
 
 #ifdef ERR_RESET
 						error_counter++;
