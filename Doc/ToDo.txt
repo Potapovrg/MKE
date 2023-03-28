@@ -1,0 +1,24 @@
+TODO:
+1) Switch delay with timer & interrupt. Int handler: spi_transmit_buffer=current_state
+2) Add ADB and Reset Bits to target 
+	
+	......
+	else if ((spi_receive_buffer.target&OTG)==OTG)
+	.......
+	
+	
+3) SPI TransmitReceive at external interrupt
+
+	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
+		{
+			mke_main();
+		}
+		
+	EXTI_handler
+	{
+		mke_main();
+	}
+
+4) Checksum calculation and report to Master
+
+5) https://github.com/NicoHood/HID
