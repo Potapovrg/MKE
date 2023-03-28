@@ -24,6 +24,8 @@ uint8_t spi_transmit_buffer=0;
 uint8_t spi_transmit_buffer_1=0;
 HAL_StatusTypeDef SPIstatus;
 
+
+
 #ifdef ERR_RESET
 uint8_t error_counter=0;
 #endif
@@ -151,6 +153,19 @@ void button_click()
 	//HAL_Delay(100);
 }
 
+void button_click_IT()
+{
+	if (click_status==CLICK_OK)
+	{
+		HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_RESET);
+		click_status=CLICK_BUSY;
+		//TIM2->CNT = 0;
+		__HAL_TIM_CLEAR_IT(&htim2 ,TIM_IT_UPDATE);
+		HAL_TIM_Base_Start_IT(&htim2);
+
+	}
+}
+
 void switch_state(void)
 {
 	target_state=spi_receive_buffer.target&OTG;
@@ -160,14 +175,16 @@ void switch_state(void)
 		if (target_state==OTG)
 		{
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
-			button_click();
+			//button_click();
+			button_click_IT();
 		}
 
 		else
 		{
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
 			//HAL_Delay(1000);
-			button_click();
+			//button_click();
+			button_click_IT();
 		}
 
 	}
@@ -229,4 +246,10 @@ uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght) {
 	return CRC8;
 }
 
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	  HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
+	  //HAL_GPIO_TogglePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin);
+	  click_status=CLICK_OK;
+	  HAL_TIM_Base_Stop_IT(&htim2);
+}

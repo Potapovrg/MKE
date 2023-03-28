@@ -4,6 +4,7 @@
 #include "usbd_def.h"
 #include "spi.h"
 #include "iwdg.h"
+#include "tim.h"
 
 #define OTG 0b00000100
 #define ADB 0b00000000
@@ -72,7 +73,14 @@ typedef struct
 	uint8_t crc;
 } bufferSPI;
 
+typedef enum
+{
+	CLICK_OK=0,
+	CLICK_BUSY=1
 
+} click_statusTypeDef;
+
+click_statusTypeDef click_status;
 
 void mouse_keyboard_test(void);
 void mouse_keyboard_test_2(void);
@@ -82,6 +90,7 @@ void mke_main_2(void);
 int check_state(void);
 void switch_state(void);
 void button_click(void);
+void button_click_IT(void);
 void send_to_usb(void);
 void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
 void keyboardhid_copy(keyboardHID *mousehid,bufferSPI *spi_receive_buffer);

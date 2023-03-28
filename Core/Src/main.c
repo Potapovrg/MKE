@@ -20,6 +20,7 @@
 #include "main.h"
 #include "iwdg.h"
 #include "spi.h"
+#include "tim.h"
 #include "usb.h"
 #include "gpio.h"
 
@@ -91,6 +92,7 @@ int main(void)
   MX_USB_PCD_Init();
   MX_SPI1_Init();
   MX_IWDG_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
 #ifdef EXEC_TIME
@@ -100,6 +102,7 @@ int main(void)
   //HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
   HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+  //HAL_TIM_Base_Stop_IT(&htim2);
   mke_init();
   /* USER CODE END 2 */
 
