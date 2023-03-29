@@ -298,23 +298,12 @@ uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght)
 void force_spi_reset(void)
 {
 	__HAL_RCC_SPI1_FORCE_RESET();
-
-	__NOP();
-
-	__NOP();
-
 	while(hspi1.Instance->SR & SPI_SR_BSY);
 	__HAL_RCC_SPI1_RELEASE_RESET();
-
-	__NOP();
-
-	__NOP();
-
 	while(hspi1.Instance->SR & SPI_SR_BSY);
 	if (HAL_SPI_Init(&hspi1) != HAL_OK)
 		{
 			NVIC_SystemReset();
-			//Error_Handler();
 		}
 }
 
