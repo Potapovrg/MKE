@@ -28,11 +28,13 @@ HAL_StatusTypeDef SPIstatus;
 
 #ifdef ERR_RESET
 uint8_t error_counter=0;
+uint8_t crc_error_counter=0;
+uint8_t timeout_error_counter=0;
 #endif
 
 void mke_init(void)
 {
-	if (check_state()!=0)
+	if (check_state()!=ADB)
 	{
 		button_click();
 	}
@@ -40,11 +42,59 @@ void mke_init(void)
 	while(1)
 	{
 		HAL_IWDG_Refresh(&hiwdg);
-		mke_main();
+		//mke_main();
+		if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
 	}
 }
 
 void mke_main(void)
+{
+
+	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer,&spi_receive_buffer,sizeof(spi_receive_buffer),2)==HAL_OK)
+	{
+		crc8=CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
+		if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
+		{
+			error_counter=0;
+			if ((spi_receive_buffer.target&RESET)==RESET) NVIC_SystemReset();
+			else if ((spi_receive_buffer.target&CHECK)==CHECK) spi_transmit_buffer=check_state();
+			else if ((spi_receive_buffer.target&ADB)==ADB)
+			{
+				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+				target_state=ADB;
+				switch_state();
+			}
+			else if ((spi_receive_buffer.target&OTG)==OTG)
+			{
+				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+				target_state=OTG;
+				switch_state();
+				send_to_usb();
+			}
+
+		}
+		else
+		{
+				spi_transmit_buffer=CRC_ERROR;
+				crc_error_counter++;
+				error_counter++;
+		}
+	}
+	else
+	{
+		spi_transmit_buffer=SPI_ERROR;
+		timeout_error_counter++;
+		error_counter++;
+	}
+
+	if (error_counter>2)
+	{
+		//NVIC_SystemReset();
+		force_spi_reset();
+	}
+}
+
+void mke_main_2(void)
 {
 #ifdef EXEC_TIME
 	start_exec_time();
@@ -117,8 +167,6 @@ void mke_main(void)
 #endif
 }
 
-
-
 int check_state(void)
 {
 	if (HAL_GPIO_ReadPin(SWITCH_FEEDBACK_GPIO_Port,SWITCH_FEEDBACK_Pin)) return OTG;
@@ -168,20 +216,20 @@ void button_click_IT()
 
 void switch_state(void)
 {
-	target_state=spi_receive_buffer.target&OTG;
+	//target_state=spi_receive_buffer.target&OTG;
 	current_state=check_state();
 	if (target_state!=current_state)
 	{
-		if (target_state==OTG)
+		if (target_state==ADB)
 		{
-			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
+			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
 			//button_click();
 			button_click_IT();
 		}
 
-		else
+		else if (target_state==OTG)
 		{
-			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
 			//HAL_Delay(1000);
 			//button_click();
 			button_click_IT();
@@ -230,7 +278,8 @@ void send_to_usb(void)
 
 }
 
-uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght) {
+uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght)
+{
 	uint8_t CRC8 = 0x00;
 	uint8_t size = (sizeof(*Data));
 	while (Buffer_lenght--) {
@@ -246,10 +295,34 @@ uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght) {
 	return CRC8;
 }
 
+void force_spi_reset(void)
+{
+	__HAL_RCC_SPI1_FORCE_RESET();
+
+	__NOP();
+
+	__NOP();
+
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+	__HAL_RCC_SPI1_RELEASE_RESET();
+
+	__NOP();
+
+	__NOP();
+
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+	if (HAL_SPI_Init(&hspi1) != HAL_OK)
+		{
+			NVIC_SystemReset();
+			//Error_Handler();
+		}
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	  HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
 	  //HAL_GPIO_TogglePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin);
 	  click_status=CLICK_OK;
+	  spi_transmit_buffer=check_state();
 	  HAL_TIM_Base_Stop_IT(&htim2);
 }

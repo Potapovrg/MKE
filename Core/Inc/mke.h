@@ -6,11 +6,21 @@
 #include "iwdg.h"
 #include "tim.h"
 
-#define OTG 0b00000100
-#define ADB 0b00000000
-#define MOUSE 0b00000001
+
+//#define ADB 0b00000000
+#define MOUSE    0b00000001
 #define KEYBOARD 0b00000010
-#define CHECK 0b00001000
+#define OTG      0b00000100
+#define CHECK    0b00001000
+#define ADB      0b00010000
+#define RESET    0b00100000
+
+//Errors
+
+#define SPI_ERROR 0xF0
+#define CRC_ERROR 0xF1
+
+
 
 //#define UNPRESS_ENABLE
 #define ERR_RESET
@@ -95,3 +105,4 @@ void send_to_usb(void);
 void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
 void keyboardhid_copy(keyboardHID *mousehid,bufferSPI *spi_receive_buffer);
 uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght);
+void force_spi_reset(void);
