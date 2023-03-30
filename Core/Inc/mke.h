@@ -10,10 +10,11 @@
 //#define ADB 0b00000000
 #define MOUSE    0b00000001
 #define KEYBOARD 0b00000010
-#define OTG      0b00000100
-#define CHECK    0b00001000
+#define CONSUMER 0b00000100
+#define OTG      0b00001000
 #define ADB      0b00010000
-#define RESET    0b00100000
+#define CHECK    0b00100000
+#define RESET    0b01000000
 
 //Errors
 
@@ -46,6 +47,13 @@ typedef struct
 	uint8_t KEYCODE6;
 } keyboardHID;
 
+typedef struct
+{
+	uint8_t KEYCODE1;
+	uint8_t KEYCODE2;
+	uint8_t KEYCODE3;
+	uint8_t KEYCODE4;
+} consumerHID;
 
 typedef struct
 {
@@ -80,6 +88,10 @@ typedef struct
 	uint8_t keycode4;
 	uint8_t keycode5;
 	uint8_t keycode6;
+	uint8_t c_keycode1;
+	uint8_t c_keycode2;
+	uint8_t c_keycode3;
+	uint8_t c_keycode4;
 	uint8_t crc;
 } bufferSPI;
 
@@ -103,6 +115,7 @@ void button_click(void);
 void button_click_IT(void);
 void send_to_usb(void);
 void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
-void keyboardhid_copy(keyboardHID *mousehid,bufferSPI *spi_receive_buffer);
+void keyboardhid_copy(keyboardHID *keyboardhid,bufferSPI *spi_receive_buffer);
+void consumerhid_copy(consumerHID *consumerhid,bufferSPI *spi_receive_buffer);
 uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght);
 void force_spi_reset(void);

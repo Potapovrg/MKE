@@ -10,9 +10,10 @@ float exec_time;
 
 float exec_time;
 mouseHID mousehid = {0,0,0,0};
-mouseHID customhid = {0x30,0,0,0}; //CONSUMER_POWER	= 0x30, MEDIA_VOLUME_UP	= 0xE9, MEDIA_VOLUME_DOWN	= 0xEA
-mouseHID customhid_r = {0,0,0,0};
+//mouseHID customhid = {0x30,0,0,0}; //CONSUMER_POWER	= 0x30, MEDIA_VOLUME_UP	= 0xE9, MEDIA_VOLUME_DOWN	= 0xEA
+//mouseHID customhid_r = {0,0,0,0};
 keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
+consumerHID consumerhid = {0,0,0,0};
 
 
 bufferSPI spi_receive_buffer;
@@ -104,79 +105,6 @@ void mke_main(void)
 	}
 }
 
-void mke_main_2(void)
-{
-#ifdef EXEC_TIME
-	start_exec_time();
-#endif
-	if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin))
-			{
-				if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
-				{
-					crc8=CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
-					if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
-					{
-
-						if ((spi_receive_buffer.target&CHECK)!=CHECK)
-						{
-							HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
-							switch_state();
-#ifdef EXEC_TIME_USB
-							start_exec_time();
-#endif
-							send_to_usb();
-							//spi_transmit_buffer=0xFF;
-							//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
-
-#ifdef ERR_RESET
-							error_counter=0;
-#endif
-
-#ifdef EXEC_TIME_USB
-							exec_time=stop_exec_time_float();
-#endif
-						}
-
-						else
-						{
-							spi_transmit_buffer=check_state();
-							//spi_transmit_buffer=0x00;
-							//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
-						}
-					}
-
-					else
-					{
-						spi_transmit_buffer=0xF8;
-						//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
-
-#ifdef ERR_RESET
-						error_counter++;
-#endif
-					}
-
-				}
-#ifdef ERR_RESET
-				else
-				{
-					error_counter++;
-					spi_transmit_buffer=0x90;
-					//HAL_SPI_Transmit(&hspi1,&spi_transmit_buffer,sizeof(spi_transmit_buffer),10);
-
-				}
-
-				if (error_counter>10)
-				{
-					NVIC_SystemReset();
-				}
-#endif
-
-			}
-#ifdef EXEC_TIME
-	exec_time=stop_exec_time_float();
-#endif
-}
-
 int check_state(void)
 {
 	if (HAL_GPIO_ReadPin(SWITCH_FEEDBACK_GPIO_Port,SWITCH_FEEDBACK_Pin)) return OTG;
@@ -201,6 +129,14 @@ void keyboardhid_copy(keyboardHID *keyboardhid,bufferSPI *spi_receive_buffer)
 	keyboardhid->KEYCODE4=spi_receive_buffer->keycode4;
 	keyboardhid->KEYCODE5=spi_receive_buffer->keycode5;
 	keyboardhid->KEYCODE6=spi_receive_buffer->keycode6;
+}
+
+void consumerhid_copy(consumerHID *consumerhid,bufferSPI *spi_receive_buffer)
+{
+	consumerhid->KEYCODE1=spi_receive_buffer->c_keycode1;
+	consumerhid->KEYCODE2=spi_receive_buffer->c_keycode2;
+	consumerhid->KEYCODE3=spi_receive_buffer->c_keycode3;
+	consumerhid->KEYCODE4=spi_receive_buffer->c_keycode4;
 }
 
 void button_click()
@@ -270,20 +206,21 @@ void send_to_usb(void)
 			keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
 			if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
 			{
-#ifndef UNPRESS_ENABLE
 				spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
-#endif
-
-#ifdef UNPRESS_ENABLE
-				keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
-				HAL_Delay(50);
-				if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
-				{
-					spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
-				}
-#endif
 			}
 		}
+
+		if ((spi_receive_buffer.target&CONSUMER)==CONSUMER)
+				{
+					//spi_transmit_buffer=spi_transmit_buffer|KEYBOARD; //test
+					consumerhid_copy(&consumerhid,&spi_receive_buffer);
+					if (USBD_CUSTOM_HID_SendReport(&hUsbDevice, &consumerhid, sizeof(consumerhid))==USBD_OK)
+					{
+						spi_transmit_buffer=spi_transmit_buffer|CONSUMER;
+					}
+				}
+
+
 	}
 
 }
