@@ -17,7 +17,7 @@ consumerHID consumerhid = {0,0,0,0};
 
 
 bufferSPI spi_receive_buffer;
-bufferSPI spi_receive_buffer2;
+bufferSPI spi_transmit_buffer_crc;
 
 uint8_t current_state = 0xff;
 uint8_t target_state = ADB;
@@ -61,7 +61,7 @@ void mke_init(void)
 void mke_main(void)
 {
 
-	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer,&spi_receive_buffer,sizeof(spi_receive_buffer),2)==HAL_OK)
+	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer_crc,&spi_receive_buffer,sizeof(spi_receive_buffer),2)==HAL_OK)
 	{
 		crc8=CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
 		if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
@@ -103,6 +103,10 @@ void mke_main(void)
 		//NVIC_SystemReset();
 		force_spi_reset();
 	}
+
+	spi_transmit_buffer_crc.target=spi_transmit_buffer;
+	spi_transmit_buffer_crc.crc=CRC_Calculate_software(&spi_transmit_buffer_crc,(sizeof(spi_transmit_buffer_crc)-1));
+
 }
 
 int check_state(void)
