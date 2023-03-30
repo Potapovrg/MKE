@@ -10,6 +10,8 @@ float exec_time;
 
 float exec_time;
 mouseHID mousehid = {0,0,0,0};
+mouseHID customhid = {0x30,0,0,0}; //CONSUMER_POWER	= 0x30, MEDIA_VOLUME_UP	= 0xE9, MEDIA_VOLUME_DOWN	= 0xEA
+mouseHID customhid_r = {0,0,0,0};
 keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
 
 
@@ -44,6 +46,14 @@ void mke_init(void)
 		HAL_IWDG_Refresh(&hiwdg);
 		//mke_main();
 		if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
+		/*
+		HAL_Delay(500);
+		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid, sizeof (customhid));
+		HAL_Delay(50);
+		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid_r, sizeof (customhid_r));
+		HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+		*/
+
 	}
 }
 
@@ -76,14 +86,14 @@ void mke_main(void)
 		else
 		{
 				spi_transmit_buffer=CRC_ERROR;
-				crc_error_counter++;
+				//crc_error_counter++;
 				error_counter++;
 		}
 	}
 	else
 	{
 		spi_transmit_buffer=SPI_ERROR;
-		timeout_error_counter++;
+		//timeout_error_counter++;
 		error_counter++;
 	}
 
