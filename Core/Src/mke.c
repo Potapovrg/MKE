@@ -105,7 +105,9 @@ void mke_main(void)
 	}
 
 	spi_transmit_buffer_crc.target=spi_transmit_buffer;
-	spi_transmit_buffer_crc.crc=CRC_Calculate_software(&spi_transmit_buffer_crc,(sizeof(spi_transmit_buffer_crc)-1));
+	crc8=0xFA;
+	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
+	spi_transmit_buffer_crc.button=crc8;
 
 }
 
