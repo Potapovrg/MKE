@@ -72,7 +72,7 @@ void mke_main(void)
 #ifdef SPI_STOP
 	spi_start();
 #endif
-	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer_crc,&spi_receive_buffer,sizeof(spi_receive_buffer),10)==HAL_OK)
+	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer_crc,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
 	{
 		crc8=CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
 		if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
