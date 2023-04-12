@@ -42,6 +42,10 @@ void mke_init(void)
 		button_click();
 	}
 
+#ifdef SPI_STOP
+	spi_stop();
+#endif
+
 	while(1)
 	{
 		HAL_IWDG_Refresh(&hiwdg);
@@ -60,8 +64,10 @@ void mke_init(void)
 
 void mke_main(void)
 {
-
-	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer_crc,&spi_receive_buffer,sizeof(spi_receive_buffer),2)==HAL_OK)
+#ifdef SPI_STOP
+	spi_start();
+#endif
+	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer_crc,&spi_receive_buffer,sizeof(spi_receive_buffer),10)==HAL_OK)
 	{
 		crc8=CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
 		if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
@@ -109,6 +115,9 @@ void mke_main(void)
 	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
 	spi_transmit_buffer_crc.button=crc8;
 
+#ifdef	SPI_STOP
+	spi_stop();
+#endif
 }
 
 int check_state(void)
@@ -175,6 +184,7 @@ void switch_state(void)
 		if (target_state==ADB)
 		{
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
 			//button_click();
 			button_click_IT();
 		}
@@ -182,6 +192,7 @@ void switch_state(void)
 		else if (target_state==OTG)
 		{
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
+			//HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
 			//HAL_Delay(1000);
 			//button_click();
 			button_click_IT();
@@ -256,8 +267,24 @@ void force_spi_reset(void)
 	while(hspi1.Instance->SR & SPI_SR_BSY);
 	if (HAL_SPI_Init(&hspi1) != HAL_OK)
 		{
-			NVIC_SystemReset();
+			//NVIC_SystemReset();
 		}
+}
+
+void spi_stop(void)
+{
+	__HAL_RCC_SPI1_FORCE_RESET();
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+}
+
+void spi_start(void)
+{
+	__HAL_RCC_SPI1_RELEASE_RESET();
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+	if (HAL_SPI_Init(&hspi1) != HAL_OK)
+			{
+				//NVIC_SystemReset();
+			}
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
