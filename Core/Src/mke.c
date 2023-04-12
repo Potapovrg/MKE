@@ -42,6 +42,11 @@ void mke_init(void)
 		button_click();
 	}
 
+	spi_transmit_buffer=check_state();
+	spi_transmit_buffer_crc.target=spi_transmit_buffer;
+	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
+	spi_transmit_buffer_crc.button=crc8;
+
 #ifdef SPI_STOP
 	spi_stop();
 #endif
@@ -111,7 +116,7 @@ void mke_main(void)
 	}
 
 	spi_transmit_buffer_crc.target=spi_transmit_buffer;
-	crc8=0xFA;
+	//crc8=0xFA;
 	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
 	spi_transmit_buffer_crc.button=crc8;
 
@@ -293,5 +298,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	  //HAL_GPIO_TogglePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin);
 	  click_status=CLICK_OK;
 	  spi_transmit_buffer=check_state();
+	  spi_transmit_buffer_crc.target=spi_transmit_buffer;
+	  crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
+	  spi_transmit_buffer_crc.button=crc8;
 	  HAL_TIM_Base_Stop_IT(&htim2);
 }
