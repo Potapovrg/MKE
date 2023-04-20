@@ -189,7 +189,7 @@ void switch_state(void)
 		if (target_state==ADB)
 		{
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
-			//HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
 			//button_click();
 			button_click_IT();
 		}
@@ -197,7 +197,7 @@ void switch_state(void)
 		else if (target_state==OTG)
 		{
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
-			//HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
+			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
 			//HAL_Delay(1000);
 			//button_click();
 			button_click_IT();
