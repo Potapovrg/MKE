@@ -58,24 +58,8 @@ typedef struct
 
 typedef struct
 {
-	uint8_t TARGET;
-	mouseHID PACKET;
-} mouseSPI;
-
-typedef struct
-{
-	uint8_t TARGET;
-	keyboardHID PACKET;
-} keyboardSPI;
-
-typedef struct
-{
-	uint8_t TARGET;
-	uint8_t PACKET;
-} switchSPI;
-
-typedef struct
-{
+	uint8_t adress_lowbyte;
+	uint8_t adress_highbyte;
 	uint8_t target;
 	uint8_t button;
 	int8_t mouse_x;
@@ -95,6 +79,29 @@ typedef struct
 	uint8_t c_keycode4;
 	uint8_t crc;
 } bufferSPI;
+
+typedef struct
+{
+	uint16_t delay;
+	uint8_t target;
+	uint8_t button;
+	int8_t mouse_x;
+	int8_t mouse_y;
+	int8_t wheel;
+	uint8_t modifier;
+	uint8_t reserved;
+	uint8_t keycode1;
+	uint8_t keycode2;
+	uint8_t keycode3;
+	uint8_t keycode4;
+	uint8_t keycode5;
+	uint8_t keycode6;
+	uint8_t c_keycode1;
+	uint8_t c_keycode2;
+	uint8_t c_keycode3;
+	uint8_t c_keycode4;
+	uint8_t result;
+} bufferMEM;
 
 typedef enum
 {

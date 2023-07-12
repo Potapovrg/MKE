@@ -19,6 +19,8 @@ consumerHID consumerhid = {0,0,0,0};
 bufferSPI spi_receive_buffer;
 bufferSPI spi_transmit_buffer_crc;
 
+bufferMEM buffermem[500];
+
 uint8_t current_state = 0xff;
 uint8_t target_state = ADB;
 uint8_t crc8=0;
@@ -37,6 +39,14 @@ uint8_t timeout_error_counter=0;
 
 void mke_init(void)
 {
+	for (int i = 0; i <= 500; i++)
+	{
+		buffermem[i].target=0b00001001;
+		buffermem[i].mouse_x=2;
+		buffermem[i].mouse_y=2;
+		buffermem[i].delay=2;
+	}
+
 	if (check_state()!=ADB)
 	{
 		button_click();
@@ -54,16 +64,7 @@ void mke_init(void)
 	while(1)
 	{
 		HAL_IWDG_Refresh(&hiwdg);
-		//mke_main();
 		if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
-		/*
-		HAL_Delay(500);
-		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid, sizeof (customhid));
-		HAL_Delay(50);
-		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid_r, sizeof (customhid_r));
-		HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
-		*/
-
 	}
 }
 
@@ -91,6 +92,9 @@ void mke_main(void)
 				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 				target_state=OTG;
 				switch_state();
+				mousehid_copy(&mousehid,&spi_receive_buffer);
+				keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
+				consumerhid_copy(&consumerhid,&spi_receive_buffer);
 				send_to_usb();
 			}
 
@@ -215,7 +219,7 @@ void send_to_usb(void)
 		if ((spi_receive_buffer.target&MOUSE)==MOUSE)
 		{
 			//spi_transmit_buffer=spi_transmit_buffer|MOUSE; //test
-			mousehid_copy(&mousehid,&spi_receive_buffer);
+			//mousehid_copy(&mousehid,&spi_receive_buffer);
 			if (USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid))==USBD_OK)
 			{
 				spi_transmit_buffer=spi_transmit_buffer|MOUSE;
@@ -225,7 +229,7 @@ void send_to_usb(void)
 		if ((spi_receive_buffer.target&KEYBOARD)==KEYBOARD)
 		{
 			//spi_transmit_buffer=spi_transmit_buffer|KEYBOARD; //test
-			keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
+			//keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
 			if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
 			{
 				spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
@@ -235,7 +239,7 @@ void send_to_usb(void)
 		if ((spi_receive_buffer.target&CONSUMER)==CONSUMER)
 				{
 					//spi_transmit_buffer=spi_transmit_buffer|KEYBOARD; //test
-					consumerhid_copy(&consumerhid,&spi_receive_buffer);
+					//consumerhid_copy(&consumerhid,&spi_receive_buffer);
 					if (USBD_CUSTOM_HID_SendReport(&hUsbDevice, &consumerhid, sizeof(consumerhid))==USBD_OK)
 					{
 						spi_transmit_buffer=spi_transmit_buffer|CONSUMER;
@@ -294,12 +298,20 @@ void spi_start(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	  HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
-	  //HAL_GPIO_TogglePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin);
-	  click_status=CLICK_OK;
-	  spi_transmit_buffer=check_state();
-	  spi_transmit_buffer_crc.target=spi_transmit_buffer;
-	  crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
-	  spi_transmit_buffer_crc.button=crc8;
-	  HAL_TIM_Base_Stop_IT(&htim2);
+	if (htim->Instance == TIM3)
+	{
+
+	}
+
+	else if (htim->Instance == TIM2)
+	{
+		HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
+		click_status=CLICK_OK;
+		spi_transmit_buffer=check_state();
+		spi_transmit_buffer_crc.target=spi_transmit_buffer;
+		crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
+		spi_transmit_buffer_crc.button=crc8;
+		HAL_TIM_Base_Stop_IT(&htim2);
+	}
+
 }
