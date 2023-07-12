@@ -29,7 +29,7 @@ uint8_t spi_transmit_buffer=0;
 uint8_t spi_transmit_buffer_1=0;
 HAL_StatusTypeDef SPIstatus;
 
-
+uint16_t adr=0;
 
 #ifdef ERR_RESET
 uint8_t error_counter=0;
@@ -60,6 +60,17 @@ void mke_init(void)
 #ifdef SPI_STOP
 	spi_stop();
 #endif
+
+	mousehid_copy(&mousehid,&buffermem[adr]);
+	keyboardhid_copy(&keyboardhid,&buffermem[adr]);
+	consumerhid_copy(&consumerhid,&buffermem[adr]);
+	TIM3->ARR = buffermem[adr].delay;
+	spi_receive_buffer.target=buffermem[adr].target;
+	target_state=OTG;
+	adr++;
+	send_to_usb();
+	__HAL_TIM_CLEAR_IT(&htim3 ,TIM_IT_UPDATE);
+	HAL_TIM_Base_Start_IT(&htim3);
 
 	while(1)
 	{
@@ -161,6 +172,34 @@ void consumerhid_copy(consumerHID *consumerhid,bufferSPI *spi_receive_buffer)
 	consumerhid->KEYCODE2=spi_receive_buffer->c_keycode2;
 	consumerhid->KEYCODE3=spi_receive_buffer->c_keycode3;
 	consumerhid->KEYCODE4=spi_receive_buffer->c_keycode4;
+}
+
+void mousehid_copy_mem(mouseHID *mousehid,bufferMEM *buffermem)
+{
+	mousehid->button=buffermem->button;
+	mousehid->mouse_x=buffermem->mouse_x;
+	mousehid->mouse_y=buffermem->mouse_y;
+	mousehid->wheel=buffermem->wheel;
+}
+
+void keyboardhid_copy_mem(keyboardHID *keyboardhid,bufferMEM *buffermem)
+{
+	keyboardhid->MODIFIER=buffermem->modifier;
+	keyboardhid->RESERVED=buffermem->reserved;
+	keyboardhid->KEYCODE1=buffermem->keycode1;
+	keyboardhid->KEYCODE2=buffermem->keycode2;
+	keyboardhid->KEYCODE3=buffermem->keycode3;
+	keyboardhid->KEYCODE4=buffermem->keycode4;
+	keyboardhid->KEYCODE5=buffermem->keycode5;
+	keyboardhid->KEYCODE6=buffermem->keycode6;
+}
+
+void consumerhid_copy_mem(consumerHID *consumerhid,bufferMEM *buffermem)
+{
+	consumerhid->KEYCODE1=buffermem->c_keycode1;
+	consumerhid->KEYCODE2=buffermem->c_keycode2;
+	consumerhid->KEYCODE3=buffermem->c_keycode3;
+	consumerhid->KEYCODE4=buffermem->c_keycode4;
 }
 
 void button_click()
@@ -300,7 +339,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM3)
 	{
-
+		mousehid_copy(&mousehid,&buffermem[adr]);
+		keyboardhid_copy(&keyboardhid,&buffermem[adr]);
+		consumerhid_copy(&consumerhid,&buffermem[adr]);
+		TIM3->ARR = buffermem[adr].delay;
+		send_to_usb();
+		adr++;
+		if (adr==500) adr=0;
 	}
 
 	else if (htim->Instance == TIM2)

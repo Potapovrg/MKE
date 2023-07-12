@@ -122,9 +122,15 @@ void switch_state(void);
 void button_click(void);
 void button_click_IT(void);
 void send_to_usb(void);
+
 void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
 void keyboardhid_copy(keyboardHID *keyboardhid,bufferSPI *spi_receive_buffer);
 void consumerhid_copy(consumerHID *consumerhid,bufferSPI *spi_receive_buffer);
+
+void mousehid_copy_mem(mouseHID *mousehid,bufferMEM *buffermem);
+void keyboardhid_copy_mem(keyboardHID *keyboardhid,bufferMEM *buffermem);
+void consumerhid_copy_mem(consumerHID *consumerhid,bufferMEM *buffermem);
+
 uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght);
 void force_spi_reset(void);
 void spi_stop(void);
