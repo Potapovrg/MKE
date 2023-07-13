@@ -8,7 +8,7 @@
 
 #define	SPI_STOP
 
-//#define ADB 0b00000000
+//target defines
 #define MOUSE    0b00000001
 #define KEYBOARD 0b00000010
 #define CONSUMER 0b00000100
@@ -16,6 +16,14 @@
 #define ADB      0b00010000
 #define CHECK    0b00100000
 #define RESET    0b01000000
+
+//control defines
+#define BYPASS   0b00000001
+#define WRITE 	 0b00000010
+#define READ     0b00000100
+#define STOP     0b00001000
+
+
 
 //Errors
 
@@ -58,8 +66,7 @@ typedef struct
 
 typedef struct
 {
-	uint8_t adress_lowbyte;
-	uint8_t adress_highbyte;
+	uint8_t control;
 	uint8_t target;
 	uint8_t button;
 	int8_t mouse_x;
@@ -77,6 +84,8 @@ typedef struct
 	uint8_t c_keycode2;
 	uint8_t c_keycode3;
 	uint8_t c_keycode4;
+	uint8_t delay_hb;
+	uint8_t delay_lb;
 	uint8_t crc;
 } bufferSPI;
 
@@ -119,9 +128,12 @@ void mke_main(void);
 void mke_main_2(void);
 int check_state(void);
 void switch_state(void);
-void button_click(void);
+void write_to_transmit_buffer(void);
 void button_click_IT(void);
 void send_to_usb(void);
+void bypass_mode(void);
+void write_mode(void);
+void read_mode(void);
 
 void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
 void keyboardhid_copy(keyboardHID *keyboardhid,bufferSPI *spi_receive_buffer);

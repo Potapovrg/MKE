@@ -8,10 +8,7 @@ extern USBD_HandleTypeDef hUsbDevice;
 float exec_time;
 #endif
 
-float exec_time;
 mouseHID mousehid = {0,0,0,0};
-//mouseHID customhid = {0x30,0,0,0}; //CONSUMER_POWER	= 0x30, MEDIA_VOLUME_UP	= 0xE9, MEDIA_VOLUME_DOWN	= 0xEA
-//mouseHID customhid_r = {0,0,0,0};
 keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
 consumerHID consumerhid = {0,0,0,0};
 
@@ -49,21 +46,19 @@ void mke_init(void)
 
 	if (check_state()!=ADB)
 	{
-		button_click();
+		button_click_IT();
 	}
 
 	spi_transmit_buffer=check_state();
-	spi_transmit_buffer_crc.target=spi_transmit_buffer;
-	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
-	spi_transmit_buffer_crc.button=crc8;
+	write_to_transmit_buffer();
 
 #ifdef SPI_STOP
 	spi_stop();
 #endif
 
-	mousehid_copy(&mousehid,&buffermem[adr]);
-	keyboardhid_copy(&keyboardhid,&buffermem[adr]);
-	consumerhid_copy(&consumerhid,&buffermem[adr]);
+	mousehid_copy_mem(&mousehid,&buffermem[adr]);
+	keyboardhid_copy_mem(&keyboardhid,&buffermem[adr]);
+	consumerhid_copy_mem(&consumerhid,&buffermem[adr]);
 	TIM3->ARR = buffermem[adr].delay;
 	spi_receive_buffer.target=buffermem[adr].target;
 	target_state=OTG;
@@ -90,24 +85,8 @@ void mke_main(void)
 		if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
 		{
 			error_counter=0;
-			if ((spi_receive_buffer.target&RESET)==RESET) NVIC_SystemReset();
-			else if ((spi_receive_buffer.target&CHECK)==CHECK) spi_transmit_buffer=check_state();
-			else if ((spi_receive_buffer.target&ADB)==ADB)
-			{
-				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
-				target_state=ADB;
-				switch_state();
-			}
-			else if ((spi_receive_buffer.target&OTG)==OTG)
-			{
-				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
-				target_state=OTG;
-				switch_state();
-				mousehid_copy(&mousehid,&spi_receive_buffer);
-				keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
-				consumerhid_copy(&consumerhid,&spi_receive_buffer);
-				send_to_usb();
-			}
+
+			if ((spi_receive_buffer.control&BYPASS)==BYPASS) bypass_mode();
 
 		}
 		else
@@ -130,14 +109,33 @@ void mke_main(void)
 		force_spi_reset();
 	}
 
-	spi_transmit_buffer_crc.target=spi_transmit_buffer;
-	//crc8=0xFA;
-	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
-	spi_transmit_buffer_crc.button=crc8;
+	write_to_transmit_buffer();
 
 #ifdef	SPI_STOP
 	spi_stop();
 #endif
+}
+
+void bypass_mode(void)
+{
+	if ((spi_receive_buffer.target&RESET)==RESET) NVIC_SystemReset();
+				else if ((spi_receive_buffer.target&CHECK)==CHECK) spi_transmit_buffer=check_state();
+				else if ((spi_receive_buffer.target&ADB)==ADB)
+				{
+					HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+					target_state=ADB;
+					switch_state();
+				}
+				else if ((spi_receive_buffer.target&OTG)==OTG)
+				{
+					HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+					target_state=OTG;
+					switch_state();
+					mousehid_copy(&mousehid,&spi_receive_buffer);
+					keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
+					consumerhid_copy(&consumerhid,&spi_receive_buffer);
+					send_to_usb();
+				}
 }
 
 int check_state(void)
@@ -145,6 +143,152 @@ int check_state(void)
 	if (HAL_GPIO_ReadPin(SWITCH_FEEDBACK_GPIO_Port,SWITCH_FEEDBACK_Pin)) return OTG;
 	else return ADB;
 }
+
+void button_click_IT()
+{
+	if (click_status==CLICK_OK)
+	{
+		HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_RESET);
+		click_status=CLICK_BUSY;
+		//TIM2->CNT = 0;
+		__HAL_TIM_CLEAR_IT(&htim2 ,TIM_IT_UPDATE);
+		HAL_TIM_Base_Start_IT(&htim2);
+
+	}
+}
+
+void switch_state(void)
+{
+	//target_state=spi_receive_buffer.target&OTG;
+	current_state=check_state();
+	if (target_state!=current_state)
+	{
+		if (target_state==ADB)
+		{
+			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
+			//button_click();
+			button_click_IT();
+		}
+
+		else if (target_state==OTG)
+		{
+			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
+			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
+			//HAL_Delay(1000);
+			//button_click();
+			button_click_IT();
+		}
+
+	}
+	spi_transmit_buffer=check_state();
+	//spi_transmit_buffer=spi_transmit_buffer|OTG;
+}
+
+void send_to_usb(void)
+{
+		if ((spi_receive_buffer.target&MOUSE)==MOUSE)
+		{
+			if (USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid))==USBD_OK)
+			{
+				spi_transmit_buffer=spi_transmit_buffer|MOUSE;
+			}
+		}
+
+		if ((spi_receive_buffer.target&KEYBOARD)==KEYBOARD)
+		{
+			if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
+			{
+				spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
+			}
+		}
+
+		if ((spi_receive_buffer.target&CONSUMER)==CONSUMER)
+		{
+			if (USBD_CUSTOM_HID_SendReport(&hUsbDevice, &consumerhid, sizeof(consumerhid))==USBD_OK)
+			{
+				spi_transmit_buffer=spi_transmit_buffer|CONSUMER;
+			}
+		}
+
+}
+
+uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght)
+{
+	uint8_t CRC8 = 0x00;
+	uint8_t size = (sizeof(*Data));
+	while (Buffer_lenght--) {
+		CRC8 ^= *Data++;
+		for (uint8_t i = 0; i < (sizeof(*Data) * 8); i++) {
+			if (CRC8 & 0x80) {
+				CRC8 = (CRC8 << 1u) ^ 07;
+			} else {
+				CRC8 = (CRC8 << 1u);
+			}
+		}
+	}
+	return CRC8;
+}
+
+void force_spi_reset(void)
+{
+	__HAL_RCC_SPI1_FORCE_RESET();
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+	__HAL_RCC_SPI1_RELEASE_RESET();
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+	if (HAL_SPI_Init(&hspi1) != HAL_OK)
+		{
+			//NVIC_SystemReset();
+		}
+}
+
+void spi_stop(void)
+{
+	__HAL_RCC_SPI1_FORCE_RESET();
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+}
+
+void spi_start(void)
+{
+	__HAL_RCC_SPI1_RELEASE_RESET();
+	while(hspi1.Instance->SR & SPI_SR_BSY);
+	if (HAL_SPI_Init(&hspi1) != HAL_OK)
+			{
+				//NVIC_SystemReset();
+			}
+}
+
+void write_to_transmit_buffer(void)
+{
+	spi_transmit_buffer_crc.target=spi_transmit_buffer;
+	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
+	spi_transmit_buffer_crc.button=crc8;
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance == TIM3)
+	{
+		mousehid_copy_mem(&mousehid,&buffermem[adr]);
+		keyboardhid_copy_mem(&keyboardhid,&buffermem[adr]);
+		consumerhid_copy_mem(&consumerhid,&buffermem[adr]);
+		TIM3->ARR = buffermem[adr].delay;
+		send_to_usb();
+		adr++;
+		if (adr==500) adr=0;
+	}
+
+	else if (htim->Instance == TIM2)
+	{
+		HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
+		click_status=CLICK_OK;
+		spi_transmit_buffer=check_state();
+		write_to_transmit_buffer();
+		HAL_TIM_Base_Stop_IT(&htim2);
+	}
+
+}
+
 
 void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer)
 {
@@ -200,163 +344,4 @@ void consumerhid_copy_mem(consumerHID *consumerhid,bufferMEM *buffermem)
 	consumerhid->KEYCODE2=buffermem->c_keycode2;
 	consumerhid->KEYCODE3=buffermem->c_keycode3;
 	consumerhid->KEYCODE4=buffermem->c_keycode4;
-}
-
-void button_click()
-{
-	HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_RESET);
-	HAL_Delay(45);
-	HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
-	//HAL_Delay(100);
-}
-
-void button_click_IT()
-{
-	if (click_status==CLICK_OK)
-	{
-		HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_RESET);
-		click_status=CLICK_BUSY;
-		//TIM2->CNT = 0;
-		__HAL_TIM_CLEAR_IT(&htim2 ,TIM_IT_UPDATE);
-		HAL_TIM_Base_Start_IT(&htim2);
-
-	}
-}
-
-void switch_state(void)
-{
-	//target_state=spi_receive_buffer.target&OTG;
-	current_state=check_state();
-	if (target_state!=current_state)
-	{
-		if (target_state==ADB)
-		{
-			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
-			//button_click();
-			button_click_IT();
-		}
-
-		else if (target_state==OTG)
-		{
-			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
-			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
-			//HAL_Delay(1000);
-			//button_click();
-			button_click_IT();
-		}
-
-	}
-	spi_transmit_buffer=check_state();
-	//spi_transmit_buffer=spi_transmit_buffer|OTG;
-}
-
-void send_to_usb(void)
-{
-	if (target_state==OTG)
-	{
-		if ((spi_receive_buffer.target&MOUSE)==MOUSE)
-		{
-			//spi_transmit_buffer=spi_transmit_buffer|MOUSE; //test
-			//mousehid_copy(&mousehid,&spi_receive_buffer);
-			if (USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid))==USBD_OK)
-			{
-				spi_transmit_buffer=spi_transmit_buffer|MOUSE;
-			}
-		}
-
-		if ((spi_receive_buffer.target&KEYBOARD)==KEYBOARD)
-		{
-			//spi_transmit_buffer=spi_transmit_buffer|KEYBOARD; //test
-			//keyboardhid_copy(&keyboardhid,&spi_receive_buffer);
-			if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
-			{
-				spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
-			}
-		}
-
-		if ((spi_receive_buffer.target&CONSUMER)==CONSUMER)
-				{
-					//spi_transmit_buffer=spi_transmit_buffer|KEYBOARD; //test
-					//consumerhid_copy(&consumerhid,&spi_receive_buffer);
-					if (USBD_CUSTOM_HID_SendReport(&hUsbDevice, &consumerhid, sizeof(consumerhid))==USBD_OK)
-					{
-						spi_transmit_buffer=spi_transmit_buffer|CONSUMER;
-					}
-				}
-
-
-	}
-
-}
-
-uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght)
-{
-	uint8_t CRC8 = 0x00;
-	uint8_t size = (sizeof(*Data));
-	while (Buffer_lenght--) {
-		CRC8 ^= *Data++;
-		for (uint8_t i = 0; i < (sizeof(*Data) * 8); i++) {
-			if (CRC8 & 0x80) {
-				CRC8 = (CRC8 << 1u) ^ 07;
-			} else {
-				CRC8 = (CRC8 << 1u);
-			}
-		}
-	}
-	return CRC8;
-}
-
-void force_spi_reset(void)
-{
-	__HAL_RCC_SPI1_FORCE_RESET();
-	while(hspi1.Instance->SR & SPI_SR_BSY);
-	__HAL_RCC_SPI1_RELEASE_RESET();
-	while(hspi1.Instance->SR & SPI_SR_BSY);
-	if (HAL_SPI_Init(&hspi1) != HAL_OK)
-		{
-			//NVIC_SystemReset();
-		}
-}
-
-void spi_stop(void)
-{
-	__HAL_RCC_SPI1_FORCE_RESET();
-	while(hspi1.Instance->SR & SPI_SR_BSY);
-}
-
-void spi_start(void)
-{
-	__HAL_RCC_SPI1_RELEASE_RESET();
-	while(hspi1.Instance->SR & SPI_SR_BSY);
-	if (HAL_SPI_Init(&hspi1) != HAL_OK)
-			{
-				//NVIC_SystemReset();
-			}
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-	if (htim->Instance == TIM3)
-	{
-		mousehid_copy(&mousehid,&buffermem[adr]);
-		keyboardhid_copy(&keyboardhid,&buffermem[adr]);
-		consumerhid_copy(&consumerhid,&buffermem[adr]);
-		TIM3->ARR = buffermem[adr].delay;
-		send_to_usb();
-		adr++;
-		if (adr==500) adr=0;
-	}
-
-	else if (htim->Instance == TIM2)
-	{
-		HAL_GPIO_WritePin(SWITCH_CONTROL_GPIO_Port,SWITCH_CONTROL_Pin,GPIO_PIN_SET);
-		click_status=CLICK_OK;
-		spi_transmit_buffer=check_state();
-		spi_transmit_buffer_crc.target=spi_transmit_buffer;
-		crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
-		spi_transmit_buffer_crc.button=crc8;
-		HAL_TIM_Base_Stop_IT(&htim2);
-	}
-
 }
