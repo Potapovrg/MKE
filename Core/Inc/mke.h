@@ -5,6 +5,7 @@
 #include "spi.h"
 #include "iwdg.h"
 #include "tim.h"
+//#include "copy_functions.h"
 
 #define	SPI_STOP
 
@@ -91,7 +92,6 @@ typedef struct
 
 typedef struct
 {
-	uint16_t delay;
 	uint8_t target;
 	uint8_t button;
 	int8_t mouse_x;
@@ -109,6 +109,8 @@ typedef struct
 	uint8_t c_keycode2;
 	uint8_t c_keycode3;
 	uint8_t c_keycode4;
+	uint8_t delay_hb;
+	uint8_t delay_lb;
 	uint8_t result;
 } bufferMEM;
 
@@ -139,9 +141,9 @@ void mousehid_copy(mouseHID *mousehid,bufferSPI *spi_receive_buffer);
 void keyboardhid_copy(keyboardHID *keyboardhid,bufferSPI *spi_receive_buffer);
 void consumerhid_copy(consumerHID *consumerhid,bufferSPI *spi_receive_buffer);
 
-void mousehid_copy_mem(mouseHID *mousehid,bufferMEM *buffermem);
-void keyboardhid_copy_mem(keyboardHID *keyboardhid,bufferMEM *buffermem);
-void consumerhid_copy_mem(consumerHID *consumerhid,bufferMEM *buffermem);
+void mousehid_copy_mem(mouseHID *mousehid,bufferMEM *mem_buffer);
+void keyboardhid_copy_mem(keyboardHID *keyboardhid,bufferMEM *mem_buffer);
+void consumerhid_copy_mem(consumerHID *consumerhid,bufferMEM *mem_buffer);
 
 uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght);
 void force_spi_reset(void);

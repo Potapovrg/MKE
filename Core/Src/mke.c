@@ -16,7 +16,7 @@ consumerHID consumerhid = {0,0,0,0};
 bufferSPI spi_receive_buffer;
 bufferSPI spi_transmit_buffer_crc;
 
-bufferMEM buffermem[500];
+bufferMEM mem_buffer[500];
 
 uint8_t current_state = 0xff;
 uint8_t target_state = ADB;
@@ -36,13 +36,13 @@ uint8_t timeout_error_counter=0;
 
 void mke_init(void)
 {
-	for (int i = 0; i <= 500; i++)
+	/*for (int i = 0; i <= 500; i++)
 	{
-		buffermem[i].target=0b00001001;
-		buffermem[i].mouse_x=2;
-		buffermem[i].mouse_y=2;
-		buffermem[i].delay=2;
-	}
+		mem_buffer[i].target=0b00001001;
+		mem_buffer[i].mouse_x=2;
+		mem_buffer[i].mouse_y=2;
+		mem_buffer[i].delay=2;
+	}*/
 
 	if (check_state()!=ADB)
 	{
@@ -56,16 +56,16 @@ void mke_init(void)
 	spi_stop();
 #endif
 
-	mousehid_copy_mem(&mousehid,&buffermem[adr]);
-	keyboardhid_copy_mem(&keyboardhid,&buffermem[adr]);
-	consumerhid_copy_mem(&consumerhid,&buffermem[adr]);
-	TIM3->ARR = buffermem[adr].delay;
-	spi_receive_buffer.target=buffermem[adr].target;
+	mousehid_copy_mem(&mousehid,&mem_buffer[adr]);
+	keyboardhid_copy_mem(&keyboardhid,&mem_buffer[adr]);
+	consumerhid_copy_mem(&consumerhid,&mem_buffer[adr]);
+	TIM3->ARR = mem_buffer[adr].delay_hb;
+	spi_receive_buffer.target=mem_buffer[adr].target;
 	target_state=OTG;
 	adr++;
-	send_to_usb();
-	__HAL_TIM_CLEAR_IT(&htim3 ,TIM_IT_UPDATE);
-	HAL_TIM_Base_Start_IT(&htim3);
+	//send_to_usb();
+	//__HAL_TIM_CLEAR_IT(&htim3 ,TIM_IT_UPDATE);
+	//HAL_TIM_Base_Start_IT(&htim3);
 
 	while(1)
 	{
@@ -79,14 +79,21 @@ void mke_main(void)
 #ifdef SPI_STOP
 	spi_start();
 #endif
-	if (HAL_SPI_TransmitReceive(&hspi1,&spi_transmit_buffer_crc,&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
+	if (HAL_SPI_TransmitReceive(&hspi1,(uint8_t*)&spi_transmit_buffer_crc,(uint8_t*)&spi_receive_buffer,sizeof(spi_receive_buffer),100)==HAL_OK)
 	{
-		crc8=CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
-		if (spi_receive_buffer.crc==CRC_Calculate_software(&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
+		crc8=CRC_Calculate_software((uint8_t*)&spi_receive_buffer,(sizeof(spi_receive_buffer)-1));
+		if (spi_receive_buffer.crc==CRC_Calculate_software((uint8_t*)&spi_receive_buffer,(sizeof(spi_receive_buffer)-1)))
 		{
 			error_counter=0;
+			HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 
 			if ((spi_receive_buffer.control&BYPASS)==BYPASS) bypass_mode();
+			else if ((spi_receive_buffer.control&WRITE)==WRITE) write_mode();
+			else if ((spi_receive_buffer.control&READ)==READ) read_mode();
+			else if ((spi_receive_buffer.control&STOP)==STOP)
+			{
+
+			}
 
 		}
 		else
@@ -128,7 +135,7 @@ void bypass_mode(void)
 				}
 				else if ((spi_receive_buffer.target&OTG)==OTG)
 				{
-					HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+					//HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 					target_state=OTG;
 					switch_state();
 					mousehid_copy(&mousehid,&spi_receive_buffer);
@@ -136,6 +143,20 @@ void bypass_mode(void)
 					consumerhid_copy(&consumerhid,&spi_receive_buffer);
 					send_to_usb();
 				}
+}
+
+void write_mode(void)
+{
+	mem_buffer_copy(&spi_receive_buffer,&mem_buffer[adr]);
+	adr++;
+	spi_transmit_buffer_crc.control=adr;
+	if (adr>255) adr=0;
+
+}
+
+void read_mode(void)
+{
+
 }
 
 int check_state(void)
@@ -189,7 +210,7 @@ void send_to_usb(void)
 {
 		if ((spi_receive_buffer.target&MOUSE)==MOUSE)
 		{
-			if (USBD_HID_Mouse_SendReport(&hUsbDevice, &mousehid, sizeof (mousehid))==USBD_OK)
+			if (USBD_HID_Mouse_SendReport(&hUsbDevice,&mousehid, sizeof (mousehid))==USBD_OK)
 			{
 				spi_transmit_buffer=spi_transmit_buffer|MOUSE;
 			}
@@ -197,7 +218,7 @@ void send_to_usb(void)
 
 		if ((spi_receive_buffer.target&KEYBOARD)==KEYBOARD)
 		{
-			if (USBD_HID_Keybaord_SendReport(&hUsbDevice, &keyboardhid, sizeof(keyboardhid))==USBD_OK)
+			if (USBD_HID_Keybaord_SendReport(&hUsbDevice,&keyboardhid, sizeof(keyboardhid))==USBD_OK)
 			{
 				spi_transmit_buffer=spi_transmit_buffer|KEYBOARD;
 			}
@@ -205,7 +226,7 @@ void send_to_usb(void)
 
 		if ((spi_receive_buffer.target&CONSUMER)==CONSUMER)
 		{
-			if (USBD_CUSTOM_HID_SendReport(&hUsbDevice, &consumerhid, sizeof(consumerhid))==USBD_OK)
+			if (USBD_CUSTOM_HID_SendReport(&hUsbDevice,&consumerhid, sizeof(consumerhid))==USBD_OK)
 			{
 				spi_transmit_buffer=spi_transmit_buffer|CONSUMER;
 			}
@@ -269,10 +290,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM3)
 	{
-		mousehid_copy_mem(&mousehid,&buffermem[adr]);
-		keyboardhid_copy_mem(&keyboardhid,&buffermem[adr]);
-		consumerhid_copy_mem(&consumerhid,&buffermem[adr]);
-		TIM3->ARR = buffermem[adr].delay;
+		mousehid_copy_mem(&mousehid,&mem_buffer[adr]);
+		keyboardhid_copy_mem(&keyboardhid,&mem_buffer[adr]);
+		consumerhid_copy_mem(&consumerhid,&mem_buffer[adr]);
+		TIM3->ARR = mem_buffer[adr].delay_hb;
 		send_to_usb();
 		adr++;
 		if (adr==500) adr=0;
@@ -318,30 +339,30 @@ void consumerhid_copy(consumerHID *consumerhid,bufferSPI *spi_receive_buffer)
 	consumerhid->KEYCODE4=spi_receive_buffer->c_keycode4;
 }
 
-void mousehid_copy_mem(mouseHID *mousehid,bufferMEM *buffermem)
+void mousehid_copy_mem(mouseHID *mousehid,bufferMEM *mem_buffer)
 {
-	mousehid->button=buffermem->button;
-	mousehid->mouse_x=buffermem->mouse_x;
-	mousehid->mouse_y=buffermem->mouse_y;
-	mousehid->wheel=buffermem->wheel;
+	mousehid->button=mem_buffer->button;
+	mousehid->mouse_x=mem_buffer->mouse_x;
+	mousehid->mouse_y=mem_buffer->mouse_y;
+	mousehid->wheel=mem_buffer->wheel;
 }
 
-void keyboardhid_copy_mem(keyboardHID *keyboardhid,bufferMEM *buffermem)
+void keyboardhid_copy_mem(keyboardHID *keyboardhid,bufferMEM *mem_buffer)
 {
-	keyboardhid->MODIFIER=buffermem->modifier;
-	keyboardhid->RESERVED=buffermem->reserved;
-	keyboardhid->KEYCODE1=buffermem->keycode1;
-	keyboardhid->KEYCODE2=buffermem->keycode2;
-	keyboardhid->KEYCODE3=buffermem->keycode3;
-	keyboardhid->KEYCODE4=buffermem->keycode4;
-	keyboardhid->KEYCODE5=buffermem->keycode5;
-	keyboardhid->KEYCODE6=buffermem->keycode6;
+	keyboardhid->MODIFIER=mem_buffer->modifier;
+	keyboardhid->RESERVED=mem_buffer->reserved;
+	keyboardhid->KEYCODE1=mem_buffer->keycode1;
+	keyboardhid->KEYCODE2=mem_buffer->keycode2;
+	keyboardhid->KEYCODE3=mem_buffer->keycode3;
+	keyboardhid->KEYCODE4=mem_buffer->keycode4;
+	keyboardhid->KEYCODE5=mem_buffer->keycode5;
+	keyboardhid->KEYCODE6=mem_buffer->keycode6;
 }
 
-void consumerhid_copy_mem(consumerHID *consumerhid,bufferMEM *buffermem)
+void consumerhid_copy_mem(consumerHID *consumerhid,bufferMEM *mem_buffer)
 {
-	consumerhid->KEYCODE1=buffermem->c_keycode1;
-	consumerhid->KEYCODE2=buffermem->c_keycode2;
-	consumerhid->KEYCODE3=buffermem->c_keycode3;
-	consumerhid->KEYCODE4=buffermem->c_keycode4;
+	consumerhid->KEYCODE1=mem_buffer->c_keycode1;
+	consumerhid->KEYCODE2=mem_buffer->c_keycode2;
+	consumerhid->KEYCODE3=mem_buffer->c_keycode3;
+	consumerhid->KEYCODE4=mem_buffer->c_keycode4;
 }
