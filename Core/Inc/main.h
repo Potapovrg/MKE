@@ -62,14 +62,22 @@ void Error_Handler(void);
 #define LED_GPIO_Port GPIOC
 #define CS_Pin GPIO_PIN_0
 #define CS_GPIO_Port GPIOB
+#define CHRG_ON_Pin GPIO_PIN_2
+#define CHRG_ON_GPIO_Port GPIOB
 #define SWITCH_FEEDBACK_Pin GPIO_PIN_12
 #define SWITCH_FEEDBACK_GPIO_Port GPIOB
+#define BTN_Pin GPIO_PIN_13
+#define BTN_GPIO_Port GPIOB
 #define SWITCH_CONTROL_Pin GPIO_PIN_8
 #define SWITCH_CONTROL_GPIO_Port GPIOA
 #define OTG_HUB_Pin GPIO_PIN_3
 #define OTG_HUB_GPIO_Port GPIOB
 #define OTG_Pin GPIO_PIN_4
 #define OTG_GPIO_Port GPIOB
+#define SEL_HUB_Pin GPIO_PIN_5
+#define SEL_HUB_GPIO_Port GPIOB
+#define SEL_PC_Pin GPIO_PIN_6
+#define SEL_PC_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

@@ -3,7 +3,7 @@
 #include "gpio.h"
 #include "usbd_def.h"
 #include "spi.h"
-#include "iwdg.h"
+//#include "iwdg.h"
 #include "tim.h"
 
 #define	SPI_STOP
@@ -103,7 +103,13 @@ typedef enum
 
 } click_statusTypeDef;
 
-click_statusTypeDef click_status;
+typedef enum
+{
+	ADB_S=0,
+	OTG_S=1,
+	CHRG_S=2
+
+} mke_stateTypeDef;
 
 void mouse_keyboard_test(void);
 void mouse_keyboard_test_2(void);
@@ -122,3 +128,5 @@ uint8_t CRC_Calculate_software(uint8_t *Data, uint8_t Buffer_lenght);
 void force_spi_reset(void);
 void spi_stop(void);
 void spi_start(void);
+void otg_state(void);
+void adb_state(void);

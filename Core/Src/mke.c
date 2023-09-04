@@ -10,11 +10,11 @@ float exec_time;
 
 float exec_time;
 mouseHID mousehid = {0,0,0,0};
-//mouseHID customhid = {0x30,0,0,0}; //CONSUMER_POWER	= 0x30, MEDIA_VOLUME_UP	= 0xE9, MEDIA_VOLUME_DOWN	= 0xEA
-//mouseHID customhid_r = {0,0,0,0};
+mouseHID customhid = {0x30,0,0,0}; //CONSUMER_POWER	= 0x30, MEDIA_VOLUME_UP	= 0xE9, MEDIA_VOLUME_DOWN	= 0xEA
+mouseHID customhid_r = {0,0,0,0};
 keyboardHID keyboardhid={0,0,0,0,0,0,0,0};
 consumerHID consumerhid = {0,0,0,0};
-
+click_statusTypeDef click_status;
 
 bufferSPI spi_receive_buffer;
 bufferSPI spi_transmit_buffer_crc;
@@ -22,6 +22,8 @@ bufferSPI spi_transmit_buffer_crc;
 uint8_t current_state = 0xff;
 uint8_t target_state = ADB;
 uint8_t crc8=0;
+uint8_t btn_state = 0;
+mke_stateTypeDef mke_state = ADB_S;
 
 uint8_t spi_transmit_buffer=0;
 uint8_t spi_transmit_buffer_1=0;
@@ -50,21 +52,68 @@ void mke_init(void)
 #ifdef SPI_STOP
 	spi_stop();
 #endif
+	adb_state();
 
 	while(1)
 	{
-		HAL_IWDG_Refresh(&hiwdg);
-		//mke_main();
+		//HAL_IWDG_Refresh(&hiwdg);
 		if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
-		/*
+
+/*
 		HAL_Delay(500);
 		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid, sizeof (customhid));
 		HAL_Delay(50);
 		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid_r, sizeof (customhid_r));
-		HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
-		*/
+		HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin); */
+
+		mke_main_2();
 
 	}
+}
+
+void mke_main_2(void)
+{
+	if (!HAL_GPIO_ReadPin(BTN_GPIO_Port,BTN_Pin)&(btn_state==0))
+		{
+		//HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+		if (mke_state==ADB_S)
+		{
+			otg_state();
+			mke_state=OTG_S;
+		}
+		else if (mke_state==OTG_S)
+		{
+			adb_state();
+			mke_state=ADB_S;
+		}
+		btn_state=1;
+		HAL_Delay(1000);
+
+		}
+	else btn_state=0;
+}
+
+void otg_state(void)
+{
+	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_RESET);
+	HAL_Delay(1000);
+	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_RESET);
+}
+
+void adb_state(void)
+{
+	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_SET);
+	HAL_Delay(1000);
+	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_SET);
+
 }
 
 void mke_main(void)
@@ -303,3 +352,4 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	  spi_transmit_buffer_crc.button=crc8;
 	  HAL_TIM_Base_Stop_IT(&htim2);
 }
+
