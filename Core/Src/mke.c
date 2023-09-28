@@ -57,7 +57,7 @@ void mke_init(void)
 	while(1)
 	{
 		//HAL_IWDG_Refresh(&hiwdg);
-		if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
+		//if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
 
 /*
 		HAL_Delay(500);
@@ -95,23 +95,41 @@ void mke_main_2(void)
 
 void otg_state(void)
 {
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
+	HAL_Delay(50);
 	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_RESET);
-	HAL_Delay(1000);
-	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_RESET);
+/*
+	GPIO_InitStruct.Pin = GPIO_PIN_12;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+	HAL_Delay(5);
+	GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	//GPIO_InitStruct.Alternate = GPIO_AF14_USB;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);*/
 }
 
 void adb_state(void)
 {
-	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_SET);
-	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
+	HAL_Delay(500);
 	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_SET);
-	HAL_Delay(1000);
-	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
-	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_SET);
+
+	//HAL_Delay(1000);
 	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_SET);
 
 }
