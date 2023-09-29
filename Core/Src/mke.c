@@ -39,12 +39,17 @@ uint8_t timeout_error_counter=0;
 
 void mke_init(void)
 {
+	/*
 	if (check_state()!=ADB)
 	{
 		button_click();
 	}
+    */
 
-	spi_transmit_buffer=check_state();
+	//spi_transmit_buffer=check_state();
+	adb_state();
+	current_state=ADB;
+	spi_transmit_buffer=current_state;
 	spi_transmit_buffer_crc.target=spi_transmit_buffer;
 	crc8=CRC_Calculate_software(&spi_transmit_buffer,1);
 	spi_transmit_buffer_crc.button=crc8;
@@ -52,21 +57,13 @@ void mke_init(void)
 #ifdef SPI_STOP
 	spi_stop();
 #endif
-	adb_state();
+
 
 	while(1)
 	{
-		//HAL_IWDG_Refresh(&hiwdg);
-		//if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
+		//mke_main_2();
+		mke_main();
 
-/*
-		HAL_Delay(500);
-		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid, sizeof (customhid));
-		HAL_Delay(50);
-		USBD_CUSTOM_HID_SendReport(&hUsbDevice, &customhid_r, sizeof (customhid_r));
-		HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin); */
-
-		mke_main_2();
 
 	}
 }
@@ -78,14 +75,22 @@ void mke_main_2(void)
 		//HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
 		if (mke_state==ADB_S)
 		{
-			otg_state();
-			mke_state=OTG_S;
+			//otg_state();
+			//mke_state=OTG_S;
+			chrg_state();
+			mke_state=CHRG_S;
 		}
 		else if (mke_state==OTG_S)
 		{
 			adb_state();
 			mke_state=ADB_S;
 		}
+		else if (mke_state=CHRG_S)
+		{
+			adb_state();
+			mke_state=ADB_S;
+		}
+
 		btn_state=1;
 		HAL_Delay(1000);
 
@@ -93,31 +98,27 @@ void mke_main_2(void)
 	else btn_state=0;
 }
 
+void chrg_state(void)
+{
+	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
+	HAL_Delay(500);
+	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_RESET);
+}
+
 void otg_state(void)
 {
-
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	//GPIO_InitTypeDef GPIO_InitStruct = {0};
 	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
 	HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
-	HAL_Delay(50);
+	//HAL_Delay(50);
 	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_RESET);
-/*
-	GPIO_InitStruct.Pin = GPIO_PIN_12;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-	HAL_Delay(5);
-	GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	//GPIO_InitStruct.Alternate = GPIO_AF14_USB;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);*/
 }
 
 void adb_state(void)
@@ -128,7 +129,6 @@ void adb_state(void)
 	HAL_GPIO_WritePin(CHRG_ON_GPIO_Port,CHRG_ON_Pin,GPIO_PIN_SET);
 	HAL_GPIO_WritePin(SEL_HUB_GPIO_Port,SEL_HUB_Pin,GPIO_PIN_SET);
 	HAL_GPIO_WritePin(SEL_PC_GPIO_Port,SEL_PC_Pin,GPIO_PIN_SET);
-
 	//HAL_Delay(1000);
 	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_SET);
 
@@ -255,23 +255,32 @@ void switch_state(void)
 	{
 		if (target_state==ADB)
 		{
+			/*
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_RESET);
 			//button_click();
 			button_click_IT();
+			*/
+			adb_state();
+			current_state=ADB;
 		}
 
 		else if (target_state==OTG)
 		{
+			/*
 			HAL_GPIO_WritePin(OTG_GPIO_Port,OTG_Pin,GPIO_PIN_SET);
 			HAL_GPIO_WritePin(OTG_HUB_GPIO_Port,OTG_HUB_Pin,GPIO_PIN_SET);
 			//HAL_Delay(1000);
 			//button_click();
 			button_click_IT();
+			*/
+			otg_state();
+			current_state=OTG;
 		}
 
 	}
-	spi_transmit_buffer=check_state();
+	//spi_transmit_buffer=check_state();
+	spi_transmit_buffer=current_state;
 	//spi_transmit_buffer=spi_transmit_buffer|OTG;
 }
 

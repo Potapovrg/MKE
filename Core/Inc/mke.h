@@ -130,3 +130,4 @@ void spi_stop(void);
 void spi_start(void);
 void otg_state(void);
 void adb_state(void);
+void chrg_state(void);
