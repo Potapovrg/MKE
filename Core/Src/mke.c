@@ -62,7 +62,8 @@ void mke_init(void)
 	while(1)
 	{
 		//mke_main_2();
-		mke_main();
+		//mke_main();
+		if (HAL_GPIO_ReadPin(CS_GPIO_Port,CS_Pin)) mke_main();
 
 
 	}
