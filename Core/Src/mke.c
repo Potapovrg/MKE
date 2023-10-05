@@ -251,7 +251,7 @@ void button_click_IT()
 void switch_state(void)
 {
 	//target_state=spi_receive_buffer.target&OTG;
-	current_state=check_state();
+	//current_state=check_state();
 	if (target_state!=current_state)
 	{
 		if (target_state==ADB)
