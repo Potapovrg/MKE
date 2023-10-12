@@ -150,13 +150,13 @@ void mke_main(void)
 			else if ((spi_receive_buffer.target&CHECK)==CHECK) spi_transmit_buffer=check_state();
 			else if ((spi_receive_buffer.target&ADB)==ADB)
 			{
-				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+				//HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 				target_state=ADB;
 				switch_state();
 			}
 			else if ((spi_receive_buffer.target&OTG)==OTG)
 			{
-				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+				//HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 				target_state=OTG;
 				switch_state();
 				send_to_usb();
